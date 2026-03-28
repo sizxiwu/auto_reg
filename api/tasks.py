@@ -104,9 +104,12 @@ def _run_register(task_id: str, req: RegisterTaskRequest):
         PlatformCls = get(req.platform)
 
         def _build_mailbox(proxy: Optional[str]):
+            from core.config_store import config_store
+            merged_extra = config_store.get_all().copy()
+            merged_extra.update({k: v for k, v in req.extra.items() if v is not None and v != ""})
             return create_mailbox(
-                provider=req.extra.get("mail_provider", "laoudo"),
-                extra=req.extra,
+                provider=merged_extra.get("mail_provider", "laoudo"),
+                extra=merged_extra,
                 proxy=proxy,
             )
 
@@ -126,11 +129,15 @@ def _run_register(task_id: str, req: RegisterTaskRequest):
                             _log(task_id, f"第 {i+1} 个账号启动前延迟 {wait_seconds:g} 秒")
                             time.sleep(wait_seconds)
                         next_start_time = time.time() + req.register_delay_seconds
+                from core.config_store import config_store
+                merged_extra = config_store.get_all().copy()
+                merged_extra.update({k: v for k, v in req.extra.items() if v is not None and v != ""})
+                
                 _config = RegisterConfig(
                     executor_type=req.executor_type,
                     captcha_solver=req.captcha_solver,
                     proxy=_proxy,
-                    extra=req.extra,
+                    extra=merged_extra,
                 )
                 _mailbox = _build_mailbox(_proxy)
                 _platform = PlatformCls(config=_config, mailbox=_mailbox)
@@ -197,6 +204,21 @@ def create_register_task(
     req: RegisterTaskRequest,
     background_tasks: BackgroundTasks,
 ):
+    mail_provider = req.extra.get("mail_provider")
+    if mail_provider == "luckmail":
+        platform = req.platform
+        if platform in ("tavily", "openblocklabs"):
+            raise HTTPException(400, f"LuckMail 渠道暂时不支持 {platform} 项目注册")
+        
+        mapping = {
+            "trae": "trae",
+            "cursor": "cursor",
+            "grok": "grok",
+            "kiro": "kiro",
+            "chatgpt": "openai"
+        }
+        req.extra["luckmail_project_code"] = mapping.get(platform, platform)
+
     task_id = f"task_{int(time.time()*1000)}"
     with _tasks_lock:
         _tasks[task_id] = {"id": task_id, "status": "pending",

@@ -50,6 +50,9 @@ export default function Register() {
         cfworker_admin_token: cfg.cfworker_admin_token || '',
         cfworker_domain: cfg.cfworker_domain || '',
         cfworker_fingerprint: cfg.cfworker_fingerprint || '',
+        luckmail_base_url: cfg.luckmail_base_url || 'https://mails.luckyous.com/',
+        luckmail_api_key: cfg.luckmail_api_key || '',
+        luckmail_email_type: cfg.luckmail_email_type || '',
       })
     })
   }, [form])
@@ -84,6 +87,9 @@ export default function Register() {
           cfworker_admin_token: values.cfworker_admin_token,
           cfworker_domain: values.cfworker_domain,
           cfworker_fingerprint: values.cfworker_fingerprint,
+          luckmail_base_url: values.luckmail_base_url,
+          luckmail_api_key: values.luckmail_api_key,
+          luckmail_email_type: values.luckmail_email_type,
           yescaptcha_key: values.yescaptcha_key,
           solver_url: values.solver_url,
         },
@@ -185,6 +191,7 @@ export default function Register() {
                 { value: 'freemail', label: 'Freemail' },
                 { value: 'laoudo', label: 'Laoudo' },
                 { value: 'cfworker', label: 'CF Worker' },
+                { value: 'luckmail', label: 'LuckMail' },
               ]}
             />
           </Form.Item>
@@ -214,6 +221,19 @@ export default function Register() {
               </Form.Item>
               <Form.Item name="cfworker_fingerprint" label="Fingerprint (可选)">
                 <Input placeholder="cfb82279f..." />
+              </Form.Item>
+            </>
+          )}
+          {mailProvider === 'luckmail' && (
+            <>
+              <Form.Item name="luckmail_base_url" label="平台地址">
+                <Input placeholder="https://mails.luckyous.com" />
+              </Form.Item>
+              <Form.Item name="luckmail_api_key" label="API Key">
+                <Input.Password placeholder="ak_..." />
+              </Form.Item>
+              <Form.Item name="luckmail_email_type" label="邮箱类型（可选）">
+                <Input placeholder="ms_graph / ms_imap" />
               </Form.Item>
             </>
           )}

@@ -118,6 +118,13 @@ def create_mailbox(provider: str, extra: dict = None, proxy: str = None) -> 'Bas
             fingerprint=extra.get("cfworker_fingerprint", ""),
             proxy=proxy,
         )
+    elif provider == "luckmail":
+        return LuckMailMailbox(
+            base_url=extra.get("luckmail_base_url") or "https://mails.luckyous.com/",
+            api_key=extra.get("luckmail_api_key", ""),
+            project_code=extra.get("luckmail_project_code", ""),
+            email_type=extra.get("luckmail_email_type", ""),
+        )
     else:  # laoudo
         return LaoudoMailbox(
             auth_token=extra.get("laoudo_auth", ""),
@@ -608,6 +615,72 @@ class MoeMailMailbox(BaseMailbox):
                 pass
             time.sleep(3)
         raise TimeoutError(f"等待验证码超时 ({timeout}s)")
+
+
+class LuckMailMailbox(BaseMailbox):
+    """LuckMail 付费接码平台 - 通过 SDK 创建订单并获取验证码"""
+
+    def __init__(self, base_url: str, api_key: str,
+                 project_code: str = "", email_type: str = ""):
+        if not base_url or not api_key:
+            raise RuntimeError(
+                "LuckMail 未配置：请在全局设置中填写 luckmail_base_url 和 luckmail_api_key"
+            )
+        from .luckmail import LuckMailClient
+        self._client = LuckMailClient(
+            base_url=base_url,
+            api_key=api_key,
+        )
+        self._project_code = project_code
+        self._email_type = email_type or None
+        self._order_no = None
+
+    def get_email(self) -> MailboxAccount:
+        try:
+            body = {"project_code": self._project_code}
+            if self._email_type:
+                body["email_type"] = self._email_type
+            order = self._client.user._sync_create_order(body)
+        except Exception as e:
+            raise RuntimeError(f"LuckMail 创建订单失败: {e}") from e
+        self._order_no = order.order_no
+        email = order.email_address
+        self._log(f"[LuckMail] 订单 {order.order_no} 分配邮箱: {email}")
+        self._log(f"[LuckMail] 超时时间: {order.expired_at}")
+        return MailboxAccount(email=email, account_id=order.order_no)
+
+    def get_current_ids(self, account: MailboxAccount) -> set:
+        # LuckMail 由服务端管理邮件，本地无需维护 ID 集合
+        return set()
+
+    def wait_for_code(self, account: MailboxAccount, keyword: str = "",
+                      timeout: int = 120, before_ids: set = None,
+                      code_pattern: str = None, **kwargs) -> str:
+        order_no = account.account_id or self._order_no
+        if not order_no:
+            raise RuntimeError("LuckMail 未创建订单，无法等待验证码")
+
+        def on_poll(result):
+            self._log(f"[LuckMail] 轮询中... 状态: {result.status}")
+
+        try:
+            code_result = self._client.user._sync_wait_for_code(
+                order_no=order_no,
+                timeout=timeout,
+                interval=3.0,
+                on_poll=on_poll,
+            )
+        except Exception as e:
+            raise TimeoutError(f"LuckMail 等待验证码失败: {e}") from e
+
+        if code_result.status == "success" and code_result.verification_code:
+            code = code_result.verification_code
+            self._log(f"[LuckMail] 收到验证码: {code}")
+            return code
+
+        raise TimeoutError(
+            f"LuckMail 等待验证码超时 ({timeout}s)，最终状态: {code_result.status}"
+        )
 
 
 class FreemailMailbox(BaseMailbox):

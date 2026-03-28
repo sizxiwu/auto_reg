@@ -21,6 +21,7 @@ const SELECT_FIELDS: Record<string, { label: string; value: string }[]> = {
     { label: 'MoeMail (sall.cc)', value: 'moemail' },
     { label: 'Freemail（自建 CF Worker）', value: 'freemail' },
     { label: 'CF Worker（自建域名）', value: 'cfworker' },
+    { label: 'LuckMail（付费接码平台）', value: 'luckmail' },
   ],
   default_executor: [
     { label: 'API 协议（无浏览器）', value: 'protocol' },
@@ -103,6 +104,15 @@ const TAB_ITEMS = [
           { key: 'cfworker_admin_token', label: '管理员 Token', secret: true },
           { key: 'cfworker_domain', label: '邮箱域名', placeholder: 'example.com' },
           { key: 'cfworker_fingerprint', label: 'Fingerprint', placeholder: '6703363b...' },
+        ],
+      },
+      {
+        title: 'LuckMail',
+        desc: '付费接码平台，支持 Outlook / Gmail 等多种邮箱类型',
+        fields: [
+          { key: 'luckmail_base_url', label: '平台地址', placeholder: 'https://mails.luckyous.com' },
+          { key: 'luckmail_api_key', label: 'API Key', secret: true },
+          { key: 'luckmail_email_type', label: '邮箱类型（可选）', placeholder: 'ms_graph / ms_imap / self_built' },
         ],
       },
     ],
@@ -521,7 +531,12 @@ export default function Settings() {
   const [activeTab, setActiveTab] = useState('register')
 
   useEffect(() => {
-    apiFetch('/config').then(form.setFieldsValue)
+    apiFetch('/config').then((data) => {
+      if (!data.luckmail_base_url) {
+        data.luckmail_base_url = 'https://mails.luckyous.com/'
+      }
+      form.setFieldsValue(data)
+    })
   }, [])
 
   const save = async () => {
