@@ -26,7 +26,7 @@ const SELECT_FIELDS: Record<string, { label: string; value: string }[]> = {
   default_executor: [
     { label: 'API 协议（无浏览器）', value: 'protocol' },
     { label: '无头浏览器', value: 'headless' },
-    { label: '有头浏览器（调试用）', value: 'headed' },
+    { label: '有头浏览器', value: 'headed' },
   ],
   default_captcha_solver: [
     { label: 'YesCaptcha', value: 'yescaptcha' },
