@@ -1,0 +1,25 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        CAMOUFOX_VERSION: ${CAMOUFOX_VERSION:-135.0.1}
+        CAMOUFOX_RELEASE: ${CAMOUFOX_RELEASE:-beta.24}
+    container_name: any-auto-register
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      HOST: 0.0.0.0
+      PORT: 8000
+      DATABASE_URL: sqlite:////app/data/account_manager.db
+      APP_ENABLE_SOLVER: "1"
+      SOLVER_PORT: 8889
+      SOLVER_BIND_HOST: 0.0.0.0
+      LOCAL_SOLVER_URL: http://127.0.0.1:8889
+      APP_CONDA_ENV: docker
+    volumes:
+      - ./data:/app/data
+      - ./_ext_targets:/app/_ext_targets
+    shm_size: "1gb"
