@@ -36,6 +36,9 @@ export default function Register() {
         mail_provider: cfg.mail_provider || 'moemail',
         yescaptcha_key: cfg.yescaptcha_key || '',
         moemail_api_url: cfg.moemail_api_url || '',
+        skymail_api_base: cfg.skymail_api_base || 'https://api.skymail.ink',
+        skymail_token: cfg.skymail_token || '',
+        skymail_domain: cfg.skymail_domain || '',
         laoudo_auth: cfg.laoudo_auth || '',
         laoudo_email: cfg.laoudo_email || '',
         laoudo_account_id: cfg.laoudo_account_id || '',
@@ -52,8 +55,15 @@ export default function Register() {
         freemail_password: cfg.freemail_password || '',
         cfworker_api_url: cfg.cfworker_api_url || '',
         cfworker_admin_token: cfg.cfworker_admin_token || '',
-        cfworker_domain: cfg.cfworker_domain || '',
+        cfworker_custom_auth: cfg.cfworker_custom_auth || '',
+        cfworker_domain_override: '',
         cfworker_fingerprint: cfg.cfworker_fingerprint || '',
+        smstome_cookie: cfg.smstome_cookie || '',
+        smstome_country_slugs: cfg.smstome_country_slugs || '',
+        smstome_phone_attempts: cfg.smstome_phone_attempts || '',
+        smstome_otp_timeout_seconds: cfg.smstome_otp_timeout_seconds || '',
+        smstome_poll_interval_seconds: cfg.smstome_poll_interval_seconds || '',
+        smstome_sync_max_pages_per_country: cfg.smstome_sync_max_pages_per_country || '',
         luckmail_base_url: cfg.luckmail_base_url || 'https://mails.luckyous.com/',
         luckmail_api_key: cfg.luckmail_api_key || '',
         luckmail_email_type: cfg.luckmail_email_type || '',
@@ -85,6 +95,9 @@ export default function Register() {
           maliapi_domain: values.maliapi_domain,
           maliapi_auto_domain_strategy: values.maliapi_auto_domain_strategy,
           moemail_api_url: values.moemail_api_url,
+          skymail_api_base: values.skymail_api_base,
+          skymail_token: values.skymail_token,
+          skymail_domain: values.skymail_domain,
           duckmail_api_url: values.duckmail_api_url,
           duckmail_provider_url: values.duckmail_provider_url,
           duckmail_bearer: values.duckmail_bearer,
@@ -94,8 +107,15 @@ export default function Register() {
           freemail_password: values.freemail_password,
           cfworker_api_url: values.cfworker_api_url,
           cfworker_admin_token: values.cfworker_admin_token,
-          cfworker_domain: values.cfworker_domain,
+          cfworker_custom_auth: values.cfworker_custom_auth,
+          cfworker_domain_override: values.cfworker_domain_override,
           cfworker_fingerprint: values.cfworker_fingerprint,
+          smstome_cookie: values.smstome_cookie,
+          smstome_country_slugs: values.smstome_country_slugs,
+          smstome_phone_attempts: values.smstome_phone_attempts,
+          smstome_otp_timeout_seconds: values.smstome_otp_timeout_seconds,
+          smstome_poll_interval_seconds: values.smstome_poll_interval_seconds,
+          smstome_sync_max_pages_per_country: values.smstome_sync_max_pages_per_country,
           luckmail_base_url: values.luckmail_base_url,
           luckmail_api_key: values.luckmail_api_key,
           luckmail_email_type: values.luckmail_email_type,
@@ -202,6 +222,7 @@ export default function Register() {
               options={[
                 { value: 'moemail', label: 'MoeMail (sall.cc)' },
                 { value: 'tempmail_lol', label: 'TempMail.lol' },
+                { value: 'skymail', label: 'SkyMail (CloudMail)' },
                 { value: 'maliapi', label: 'YYDS Mail / MaliAPI' },
                 { value: 'duckmail', label: 'DuckMail' },
                 { value: 'freemail', label: 'Freemail' },
@@ -211,6 +232,19 @@ export default function Register() {
               ]}
             />
           </Form.Item>
+          {mailProvider === 'skymail' && (
+            <>
+              <Form.Item name="skymail_api_base" label="API Base">
+                <Input placeholder="https://api.skymail.ink" />
+              </Form.Item>
+              <Form.Item name="skymail_token" label="Authorization Token">
+                <Input.Password placeholder="Bearer xxxxx" />
+              </Form.Item>
+              <Form.Item name="skymail_domain" label="邮箱域名">
+                <Input placeholder="mail.example.com" />
+              </Form.Item>
+            </>
+          )}
           {mailProvider === 'laoudo' && (
             <>
               <Form.Item name="laoudo_email" label="邮箱地址">
@@ -254,7 +288,14 @@ export default function Register() {
               <Form.Item name="cfworker_admin_token" label="Admin Token">
                 <Input placeholder="abc123,,,abc" />
               </Form.Item>
-              <Form.Item name="cfworker_domain" label="域名">
+              <Form.Item name="cfworker_custom_auth" label="Site Password">
+                <Input.Password placeholder="private site password" />
+              </Form.Item>
+              <Form.Item
+                name="cfworker_domain_override"
+                label="单次任务指定域名（可选）"
+                extra="留空时将从设置页已启用的域名列表中随机选择。"
+              >
                 <Input placeholder="example.com" />
               </Form.Item>
               <Form.Item name="cfworker_fingerprint" label="Fingerprint (可选)">
@@ -279,6 +320,32 @@ export default function Register() {
             </>
           )}
         </Card>
+
+        {platform === 'chatgpt' && (
+          <Card title="ChatGPT 手机验证" style={{ marginBottom: 16 }}>
+            <Text type="secondary" style={{ display: 'block', marginBottom: 12 }}>
+              仅在 OAuth 流程进入 `add_phone` 时使用，用于自动取号并轮询短信验证码。
+            </Text>
+            <Form.Item name="smstome_cookie" label="SMSToMe Cookie">
+              <Input.Password placeholder="cf_clearance=...; PHPSESSID=..." />
+            </Form.Item>
+            <Form.Item name="smstome_country_slugs" label="国家列表">
+              <Input placeholder="united-kingdom,poland,finland" />
+            </Form.Item>
+            <Form.Item name="smstome_phone_attempts" label="手机号尝试次数">
+              <Input placeholder="3" />
+            </Form.Item>
+            <Form.Item name="smstome_otp_timeout_seconds" label="短信等待秒数">
+              <Input placeholder="45" />
+            </Form.Item>
+            <Form.Item name="smstome_poll_interval_seconds" label="轮询间隔秒数">
+              <Input placeholder="5" />
+            </Form.Item>
+            <Form.Item name="smstome_sync_max_pages_per_country" label="每国同步页数">
+              <Input placeholder="5" />
+            </Form.Item>
+          </Card>
+        )}
 
         {captchaSolver === 'yescaptcha' && (
           <Card title="验证码配置" style={{ marginBottom: 16 }}>
