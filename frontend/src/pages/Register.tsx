@@ -48,8 +48,13 @@ export default function Register() {
         freemail_password: cfg.freemail_password || '',
         cfworker_api_url: cfg.cfworker_api_url || '',
         cfworker_admin_token: cfg.cfworker_admin_token || '',
+        cfworker_custom_auth: cfg.cfworker_custom_auth || '',
         cfworker_domain: cfg.cfworker_domain || '',
         cfworker_fingerprint: cfg.cfworker_fingerprint || '',
+        smstome_cookie: cfg.smstome_cookie || '',
+        smstome_country_slugs: cfg.smstome_country_slugs || '',
+        smstome_phone_attempts: cfg.smstome_phone_attempts || '',
+        smstome_otp_timeout_seconds: cfg.smstome_otp_timeout_seconds || '',
         luckmail_base_url: cfg.luckmail_base_url || 'https://mails.luckyous.com/',
         luckmail_api_key: cfg.luckmail_api_key || '',
         luckmail_email_type: cfg.luckmail_email_type || '',
@@ -86,8 +91,13 @@ export default function Register() {
           freemail_password: values.freemail_password,
           cfworker_api_url: values.cfworker_api_url,
           cfworker_admin_token: values.cfworker_admin_token,
+          cfworker_custom_auth: values.cfworker_custom_auth,
           cfworker_domain: values.cfworker_domain,
           cfworker_fingerprint: values.cfworker_fingerprint,
+          smstome_cookie: values.smstome_cookie,
+          smstome_country_slugs: values.smstome_country_slugs,
+          smstome_phone_attempts: values.smstome_phone_attempts,
+          smstome_otp_timeout_seconds: values.smstome_otp_timeout_seconds,
           luckmail_base_url: values.luckmail_base_url,
           luckmail_api_key: values.luckmail_api_key,
           luckmail_email_type: values.luckmail_email_type,
@@ -220,6 +230,9 @@ export default function Register() {
               </Form.Item>
               <Form.Item name="cfworker_admin_token" label="Admin Token">
                 <Input placeholder="abc123,,,abc" />
+              </Form.Item>
+              <Form.Item name="cfworker_custom_auth" label="Site Password">
+                <Input.Password placeholder="private site password" />
               </Form.Item>
               <Form.Item name="cfworker_domain" label="域名">
                 <Input placeholder="example.com" />
