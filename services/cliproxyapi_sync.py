@@ -8,6 +8,7 @@ from datetime import datetime, timezone
 from typing import Any, Optional
 
 from platforms.chatgpt.status_probe import CODEX_USER_AGENT, extract_chatgpt_account_id
+from services.chatgpt_account_state import is_account_deactivated_message
 
 DEFAULT_CLIPROXYAPI_BASE_URL = "http://127.0.0.1:8317"
 
@@ -215,6 +216,8 @@ def _probe_remote_auth(auth_index: str, account_id: str, *, api_url: str | None 
         remote_state = "usable"
     elif upstream_status == 401:
         remote_state = "access_token_invalidated" if error_code == "token_invalidated" else "unauthorized"
+    elif is_account_deactivated_message(error_code, message):
+        remote_state = "account_deactivated"
     elif upstream_status in (402, 403):
         remote_state = "payment_required"
     elif upstream_status == 429:

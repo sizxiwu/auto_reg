@@ -9,6 +9,7 @@ from datetime import datetime, timezone
 from typing import Any, Optional
 
 from curl_cffi import requests as cffi_requests
+from services.chatgpt_account_state import is_account_deactivated_message
 
 CODEX_USAGE_URL = "https://chatgpt.com/backend-api/wham/usage"
 CHATGPT_ME_URL = "https://chatgpt.com/backend-api/me"
@@ -204,9 +205,14 @@ def _probe_codex_usage(access_token: str, account_id: str, proxy: Optional[str])
 def probe_local_chatgpt_status(account: Any, proxy: Optional[str] = None) -> dict[str, Any]:
     checked_at = _utcnow_iso()
     extra = getattr(account, "extra", {}) or {}
-    access_token = str(extra.get("access_token") or getattr(account, "token", "") or "").strip()
-    refresh_token = str(extra.get("refresh_token", "") or "").strip()
-    session_token = str(extra.get("session_token", "") or "").strip()
+    access_token = str(
+        extra.get("access_token")
+        or getattr(account, "access_token", "")
+        or getattr(account, "token", "")
+        or ""
+    ).strip()
+    refresh_token = str(extra.get("refresh_token") or getattr(account, "refresh_token", "") or "").strip()
+    session_token = str(extra.get("session_token") or getattr(account, "session_token", "") or "").strip()
     account_id = extract_chatgpt_account_id(account)
 
     result: dict[str, Any] = {
@@ -315,6 +321,8 @@ def probe_local_chatgpt_status(account: Any, proxy: Optional[str] = None) -> dic
                 result["codex"]["state"] = "access_token_invalidated"
             else:
                 result["codex"]["state"] = "unauthorized"
+        elif is_account_deactivated_message(codex_result.error_code, codex_result.message):
+            result["codex"]["state"] = "account_deactivated"
         elif codex_result.status_code in (402, 403):
             result["codex"]["state"] = "payment_required"
         elif codex_result.status_code == 429:
@@ -338,7 +346,11 @@ def probe_local_chatgpt_status(account: Any, proxy: Optional[str] = None) -> dic
         return result
 
     if me_result.status_code == 403:
-        result["auth"]["state"] = "banned_like"
+        result["auth"]["state"] = (
+            "account_deactivated"
+            if is_account_deactivated_message(me_result.error_code, me_result.message)
+            else "banned_like"
+        )
         result["codex"].update(
             {
                 "state": "skipped_auth_invalid",

@@ -5,9 +5,12 @@ from platforms.chatgpt.status_probe import ProbeHTTPResult, probe_local_chatgpt_
 
 
 class DummyAccount:
-    def __init__(self, *, token="", extra=None, user_id=""):
+    def __init__(self, *, token="", access_token="", refresh_token="", session_token="", extra=None, user_id=""):
         self.email = "demo@example.com"
         self.token = token
+        self.access_token = access_token
+        self.refresh_token = refresh_token
+        self.session_token = session_token
         self.extra = dict(extra or {})
         self.user_id = user_id
 
@@ -38,6 +41,44 @@ class ChatGPTStatusProbeTests(unittest.TestCase):
             result = probe_local_chatgpt_status(account)
 
         self.assertEqual(result["auth"]["state"], "access_token_invalidated")
+        self.assertEqual(result["codex"]["state"], "skipped_auth_invalid")
+
+    def test_probe_reads_duck_typed_access_token_attributes(self):
+        account = DummyAccount(access_token="access-token", session_token="session-token")
+
+        with mock.patch(
+            "platforms.chatgpt.status_probe._probe_backend_me",
+            return_value=ProbeHTTPResult(
+                status_code=401,
+                headers={},
+                body_text='{"error":{"code":"token_invalidated"}}',
+                body_json={"error": {"code": "token_invalidated", "message": "invalidated"}},
+                error_code="token_invalidated",
+                message="invalidated",
+            ),
+        ):
+            result = probe_local_chatgpt_status(account)
+
+        self.assertEqual(result["auth"]["state"], "access_token_invalidated")
+        self.assertTrue(result["auth"]["refresh_available"])
+
+    def test_probe_marks_account_deactivated(self):
+        account = DummyAccount(token="access-token")
+
+        with mock.patch(
+            "platforms.chatgpt.status_probe._probe_backend_me",
+            return_value=ProbeHTTPResult(
+                status_code=403,
+                headers={},
+                body_text='{"error":{"code":"account_deactivated","message":"You do not have an account because it has been deleted or deactivated."}}',
+                body_json={"error": {"code": "account_deactivated", "message": "You do not have an account because it has been deleted or deactivated."}},
+                error_code="account_deactivated",
+                message="You do not have an account because it has been deleted or deactivated.",
+            ),
+        ):
+            result = probe_local_chatgpt_status(account)
+
+        self.assertEqual(result["auth"]["state"], "account_deactivated")
         self.assertEqual(result["codex"]["state"], "skipped_auth_invalid")
 
     def test_probe_extracts_plan_and_quota_state(self):

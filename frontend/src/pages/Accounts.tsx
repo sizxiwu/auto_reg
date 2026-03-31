@@ -82,6 +82,8 @@ function authStateMeta(state?: string) {
   switch (state) {
     case 'access_token_valid':
       return { color: 'success', label: 'AT有效' }
+    case 'account_deactivated':
+      return { color: 'error', label: '已失效' }
     case 'access_token_invalidated':
       return { color: 'error', label: 'AT失效' }
     case 'unauthorized':
@@ -101,6 +103,8 @@ function codexStateMeta(state?: string) {
   switch (state) {
     case 'usable':
       return { color: 'success', label: '可用' }
+    case 'account_deactivated':
+      return { color: 'error', label: '已失效' }
     case 'access_token_invalidated':
       return { color: 'error', label: 'AT失效' }
     case 'unauthorized':
@@ -261,6 +265,9 @@ function cliproxyStateMeta(sync: any) {
   }
   if (sync.remote_state === 'usable') {
     return { color: 'success', label: '远端可用' }
+  }
+  if (sync.remote_state === 'account_deactivated') {
+    return { color: 'error', label: '远端已失效' }
   }
   if (sync.remote_state === 'access_token_invalidated') {
     return { color: 'error', label: '远端AT失效' }

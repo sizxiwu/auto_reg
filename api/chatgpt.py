@@ -4,6 +4,7 @@ from sqlmodel import Session
 from pydantic import BaseModel
 from typing import Optional
 from core.db import AccountModel, get_session
+from services.chatgpt_account_state import apply_chatgpt_status_policy
 import json, sys
 
 
@@ -50,6 +51,7 @@ def _persist_local_probe(acc: AccountModel, probe: dict, session: Session) -> No
     extra = acc.get_extra()
     extra["chatgpt_local"] = probe
     acc.set_extra(extra)
+    apply_chatgpt_status_policy(acc, local_probe=probe)
     from datetime import datetime
     acc.updated_at = datetime.utcnow()
     session.add(acc)

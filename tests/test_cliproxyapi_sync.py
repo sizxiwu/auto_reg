@@ -82,6 +82,21 @@ class CliproxyapiSyncTests(unittest.TestCase):
         self.assertEqual(result["last_probe_error_code"], "token_invalidated")
         self.assertEqual(result["remote_state"], "access_token_invalidated")
 
+    def test_probe_remote_auth_maps_account_deactivated(self):
+        with mock.patch(
+            "services.cliproxyapi_sync._request_json",
+            return_value={
+                "status_code": 403,
+                "header": {},
+                "body": '{"error":{"code":"account_deactivated","message":"You do not have an account because it has been deleted or deactivated."}}',
+            },
+        ):
+            result = _probe_remote_auth("auth-001", "acct-123", api_url="http://127.0.0.1:8317", api_key="demo")
+
+        self.assertEqual(result["last_probe_status_code"], 403)
+        self.assertEqual(result["last_probe_error_code"], "account_deactivated")
+        self.assertEqual(result["remote_state"], "account_deactivated")
+
 
 if __name__ == "__main__":
     unittest.main()

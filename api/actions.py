@@ -7,6 +7,7 @@ from core.db import AccountModel, get_session
 from core.registry import get
 from core.base_platform import RegisterConfig
 from core.config_store import config_store
+from services.chatgpt_account_state import apply_chatgpt_status_policy
 
 router = APIRouter(prefix="/actions", tags=["actions"])
 
@@ -61,6 +62,18 @@ def execute_action(
 
     try:
         result = instance.execute_action(action_id, account, body.params)
+        if platform == "chatgpt":
+            data = result.get("data") if isinstance(result.get("data"), dict) else {}
+            status_reason = ""
+            if action_id == "probe_local_status":
+                status_reason = apply_chatgpt_status_policy(acc_model, local_probe=data.get("probe"))
+            elif action_id == "sync_cliproxyapi_status":
+                status_reason = apply_chatgpt_status_policy(acc_model, remote_sync=data.get("sync"))
+            if status_reason:
+                from datetime import datetime, timezone
+
+                acc_model.updated_at = datetime.now(timezone.utc)
+                session.add(acc_model)
         if isinstance(result.get("account_extra_patch"), dict):
             extra = acc_model.get_extra()
             _merge_extra_patch(extra, result["account_extra_patch"])
