@@ -337,6 +337,8 @@ export default function ScheduledTasks() {
                 { value: 'tempmail_lol', label: 'TempMail' },
                 { value: 'moemail', label: 'MoeMail' },
                 { value: 'freemail', label: 'Freemail' },
+                { value: 'luckmail', label: 'LuckMail' },
+                { value: 'skymail', label: 'SkyMail' },
               ]}
             />
           </Form.Item>
