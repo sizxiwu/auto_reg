@@ -64,7 +64,7 @@ Multi-platform account automatic registration and management system, supporting 
 - Node.js 18+
 - Conda (recommended) or venv
 
-## ChatGPT 专项能力
+## ChatGPT Capabilities
 
 当前版本里，**ChatGPT 是功能最完整的平台之一**，不仅支持注册，还支持 Token 生命周期管理、状态探测和外部系统同步。
 
@@ -99,7 +99,7 @@ Multi-platform account automatic registration and management system, supporting 
   - 补传远端未发现的 auth-file
   - 支持“当前筛选范围”或“当前所选账号”两种作用范围
 
-## 邮箱服务支持
+## Email Services
 
 根据当前注册页实际配置项，项目支持以下邮箱服务：
 
@@ -125,7 +125,7 @@ Kiro 当前风控较严格，邮箱方案会显著影响成功率。当前项目
 
 因此进行 **Kiro (AWS Builder ID)** 注册时，建议优先使用**自建邮箱**。
 
-## 快速开始
+## Quick Start
 
 ### 1. 创建并激活 Conda 环境
 
