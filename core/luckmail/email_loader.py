@@ -1,5 +1,3 @@
-# 替换 core/luckmail/email_loader.py 的完整代码如下
-
 from enum import Enum
 from dataclasses import dataclass, field
 from typing import List, Optional, Dict
@@ -24,7 +22,7 @@ class PurchasedEmail:
     """已购邮箱"""
     address: str
     token: str
-    status: int = EmailStatus.ACTIVE.value
+    status: int = 0
     tags: List[str] = field(default_factory=list)
     purchase_id: Optional[int] = None
     created_at: Optional[str] = None
@@ -37,8 +35,6 @@ class PurchasedEmail:
     def __post_init__(self):
         if self.created_at is None:
             self.created_at = datetime.now().isoformat()
-        if self.tags is None:
-            self.tags = []
 
     def mark_used(self):
         self.use_count += 1
@@ -109,26 +105,8 @@ class PurchasedEmailLoader:
                         'token': e.token,
                         'status': e.status,
                         'tags': e.tags,
-                        'purchase_id': e.purchase_id,
-                        'created_at': e.created_at,
-                        'last_used_at': e.last_used_at,
                         'use_count': e.use_count,
-                        'project': e.project,
-                        'domain': e.domain,
-                        'remark': e.remark,
                     } for e in emails], f, ensure_ascii=False, indent=2)
-            elif self.format == 'csv':
-                with open(self.file_path, 'w', encoding='utf-8', newline='') as f:
-                    writer = csv.DictWriter(f, fieldnames=['address', 'token', 'status', 'tags', 'use_count'])
-                    writer.writeheader()
-                    for e in emails:
-                        writer.writerow({
-                            'address': e.address,
-                            'token': e.token,
-                            'status': e.status,
-                            'tags': ','.join(e.tags),
-                            'use_count': e.use_count,
-                        })
             return True
         except Exception as e:
             logger.error(f"Error saving emails: {e}")
@@ -219,7 +197,6 @@ class PurchasedEmailLoader:
             'disabled': len(self.get_disabled()),
             'unused': len(self.get_unused()),
             'used': len([e for e in all_emails if e.use_count > 0]),
-            'total_uses': sum(e.use_count for e in all_emails),
         }
 
     def count(self) -> int:
@@ -233,13 +210,7 @@ class PurchasedEmailLoader:
             backup_path = self.backup_dir / backup_name
             emails = list(self._cache.values())
             with open(backup_path, 'w', encoding='utf-8') as f:
-                json.dump([{
-                    'address': e.address,
-                    'token': e.token,
-                    'status': e.status,
-                    'tags': e.tags,
-                    'use_count': e.use_count,
-                } for e in emails], f, ensure_ascii=False, indent=2)
+                json.dump([{'address': e.address, 'token': e.token, 'status': e.status, 'tags': e.tags, 'use_count': e.use_count} for e in emails], f, ensure_ascii=False, indent=2)
             return True
         except Exception as e:
             logger.error(f"Backup failed: {e}")
@@ -253,22 +224,11 @@ class PurchasedEmailLoader:
                 writer = csv.DictWriter(f, fieldnames=['address', 'token', 'status', 'tags', 'use_count', 'project'])
                 writer.writeheader()
                 for e in emails:
-                    writer.writerow({
-                        'address': e.address,
-                        'token': e.token,
-                        'status': e.status,
-                        'tags': ','.join(e.tags),
-                        'use_count': e.use_count,
-                        'project': e.project or '',
-                    })
+                    writer.writerow({'address': e.address, 'token': e.token, 'status': e.status, 'tags': ','.join(e.tags), 'use_count': e.use_count, 'project': e.project or ''})
             return True
         except Exception as e:
             logger.error(f"Export failed: {e}")
             return False
-
-    def clear(self) -> None:
-        """清空"""
-        self._cache.clear()
 
     def get_all(self) -> List[PurchasedEmail]:
         """获取全部"""
