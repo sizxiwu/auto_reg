@@ -203,21 +203,27 @@ export default function ContributionPage() {
       >
         {/* 提示信息 */}
         <Alert
-          message="开启贡献模式后，注册成功账号将只上传到贡献服务器"
+          message="贡献功能（可选）"
           description={
             <div>
-              <p style={{ margin: '4px 0' }}>
-                CPA / CodexProxy / Sub2API 自动上传会被停用，避免重复上报。
+              <p style={{ margin: '4px 0', fontWeight: 500 }}>
+                ⚠️ 此功能完全可选，不强制开启！请根据自身情况决定是否启用。
               </p>
               <p style={{ margin: '4px 0' }}>
-                目前该功能在 xem 中转站测试中，有兴趣可以进群了解
+                开启后，注册成功账号将上传到贡献服务器，CPA/CodexProxy/Sub2API 自动上传会被停用，避免重复上报。
               </p>
               <p style={{ margin: '4px 0' }}>
-                中转站: https://ai.xem8k5.top/ 群号: 634758974
+                不开启也不影响正常使用，您仍可使用其他上传方式（CPA/Sub2API/CodexProxy 等）。
+              </p>
+              <p style={{ margin: '4px 0' }}>
+                目前该功能在 xem 中转站测试中，有兴趣可以进群了解。
+              </p>
+              <p style={{ margin: '4px 0' }}>
+                中转站: <a href="https://ai.xem8k5.top/" target="_blank" rel="noopener noreferrer">https://ai.xem8k5.top/</a> 群号: 634758974
               </p>
             </div>
           }
-          type="warning"
+          type="info"
           showIcon
           style={{ marginBottom: 24 }}
         />
